@@ -337,7 +337,7 @@ export default function ConnectWallet() {
       onClick={handleConnect}
       disabled={isPending || connectors.length === 0}
       style={{
-        padding: 'var(--spacing-3) var(--spacing-10)',
+        padding: '6px var(--spacing-5)',
         backgroundColor: 'var(--accent-yellow)',
         color: 'var(--neutral-black)',
         border: '3px solid var(--neutral-black)',

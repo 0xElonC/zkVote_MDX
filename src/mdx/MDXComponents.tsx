@@ -3,6 +3,7 @@ import React from 'react'
 import { MDXProvider } from '@mdx-js/react'
 import Counter from '../components/Counter'
 import ChainVote from '../components/ChainVote'
+import ZKChainVote from '../components/ZKChainVote'
 
 /**
  * 这里定义 MDX 内常见元素的 React 组件映射（基于 My First NFT 设计系统）
@@ -139,7 +140,18 @@ export const Pre: React.FC<React.PropsWithChildren> = ({ children }) => (
     width: '100%',
     boxSizing: 'border-box',
     boxShadow: 'var(--shadow-level-1)'
-  }}>{children}</pre>
+  }}>
+    <style>{`
+      pre code {
+        background-color: transparent !important;
+        color: inherit !important;
+        padding: 0 !important;
+        border: none !important;
+        font-size: inherit !important;
+      }
+    `}</style>
+    {children}
+  </pre>
 )
 
 export const Card: React.FC<React.PropsWithChildren & {accent?: boolean}> = ({ children, accent }) => (
@@ -175,6 +187,7 @@ export const mdxComponents = {
   Card,
   Counter,
   ChainVote,
+  ZKChainVote,
 }
 
 /**

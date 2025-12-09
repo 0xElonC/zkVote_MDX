@@ -16,7 +16,7 @@ export default function Navbar() {
       boxShadow: 'var(--shadow-level-1)'
     }}>
       <div style={{
-        maxWidth: '1200px',
+        maxWidth: '800px',
         margin: '0 auto',
         display: 'flex',
         justifyContent: 'space-between',

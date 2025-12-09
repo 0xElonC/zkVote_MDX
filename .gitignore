@@ -53,3 +53,14 @@ coverage/
 *.pem
 .vercel
 .turbo
+
+# ZK Circuit Compilation Output
+zkp/
+public/circuits/
+*.r1cs
+*.sym
+*.zkey
+*.ptau
+*_js/
+verification_key.json
+test_*.json

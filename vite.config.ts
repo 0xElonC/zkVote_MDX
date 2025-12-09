@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,5 +11,25 @@ export default defineConfig({
       providerImportSource: '@mdx-js/react',
     }),
     react(),
+    nodePolyfills({
+      // Enable polyfills for Buffer and other Node.js globals
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      // Enable polyfills for specific Node.js modules
+      protocolImports: true,
+    }),
   ],
+  define: {
+    'global': 'globalThis',
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      process: 'process/browser',
+      util: 'util',
+    },
+  },
 })

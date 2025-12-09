@@ -36,7 +36,9 @@ export default function Hero() {
 
         {/* LXDAO 卡片 */}
         <div style={{ ...styles.infoCard, ...styles.lxdaoCard }}>
-          <div style={styles.iconCircle}>❤️</div>
+          <div style={styles.iconCircle}>
+            <img src="/lxdao-logo.svg" alt="LXDAO Logo" style={styles.logoImage} />
+          </div>
           <div>
             <div style={styles.cardLabel}>构建者</div>
             <div style={styles.cardValue}>LXDAO 社区</div>
@@ -159,6 +161,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     fontSize: '1.5rem',
   },
+  logoImage: {
+    width: '32px',
+    height: '32px',
+    objectFit: 'contain',
+    marginLeft: '3px',
+  },
   cardLabel: {
     fontSize: '0.875rem',
     color: 'var(--neutral-600)',
@@ -193,4 +201,3 @@ const styles: { [key: string]: React.CSSProperties } = {
 }
 
 // 响应式样式
-const mediaQuery = '@media (max-width: 768px)'

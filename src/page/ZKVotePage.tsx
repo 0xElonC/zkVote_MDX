@@ -1,5 +1,4 @@
 // src/pages/ZKVotePage.tsx
-import React from 'react'
 import Content from '../content/MyFirstZKVote.mdx'
 import { MDXWrapper } from '../mdx/MDXComponents'
 import Navbar from '../components/Navbar'

@@ -1,6 +1,7 @@
 import { createConfig, http } from "wagmi";
 import { mainnet, polygon, sepolia, bscTestnet, polygonAmoy } from 'wagmi/chains';
 import { injected,walletConnect } from "wagmi/connectors";
+import { createPublicClient } from 'viem';
 
 const WC_PROJECT_ID = import.meta.env.VITE_WC_PROJECT_ID;
 
@@ -27,4 +28,10 @@ export const wagmiConfig = createConfig({
         [polygonAmoy.id]: http(),
     },
     ssr:false,
+})
+
+// 创建 public client 用于读取链上数据
+export const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(),
 })
