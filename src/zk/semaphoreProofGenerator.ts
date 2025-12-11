@@ -129,6 +129,9 @@ export async function generateSemaphoreProof(
       merkleTreeDepthType: typeof fullProof.merkleTreeDepth,
       merkleTreeDepthKeys: fullProof.merkleTreeDepth ? Object.keys(fullProof.merkleTreeDepth) : 'N/A',
       points: fullProof.points?.length || 'undefined',
+      groupDepthForReference: group.depth, // 对比:Group的depth
+      message: fullProof.message?.toString() || 'undefined',
+      scope: fullProof.scope?.toString() || 'undefined',
     })
 
     // 3. 格式化为合约所需格式

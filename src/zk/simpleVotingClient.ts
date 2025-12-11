@@ -80,7 +80,6 @@ export async function submitZkVote(
     optionId,
     merkleTreeDepth: proof.merkleTreeDepth,
     merkleTreeDepthType: typeof proof.merkleTreeDepth,
-    merkleTreeDepthToString: proof.merkleTreeDepth?.toString(),
     merkleTreeRoot: proof.merkleTreeRoot?.toString(),
     nullifier: proof.nullifier?.toString(),
     message: proof.message?.toString(),
@@ -88,21 +87,28 @@ export async function submitZkVote(
     pointsLength: proof.points?.length,
   })
 
-  // 确保 merkleTreeDepth 是 bigint
-  const merkleTreeDepth = typeof proof.merkleTreeDepth === 'bigint'
-    ? proof.merkleTreeDepth
-    : BigInt(proof.merkleTreeDepth as any)
+  // 确保所有字段都是正确的 bigint 类型
+  const semaphoreProof = {
+    merkleTreeDepth: typeof proof.merkleTreeDepth === 'bigint'
+      ? proof.merkleTreeDepth
+      : BigInt(proof.merkleTreeDepth),
+    merkleTreeRoot: proof.merkleTreeRoot,
+    nullifier: proof.nullifier,
+    message: proof.message,
+    scope: proof.scope,
+    points: proof.points  // 必须是完整的 [bigint, bigint, ...] 数组
+  }
 
-  console.log('[submitZkVote] 准备提交的参数:', {
-    proposalId: BigInt(proposalId).toString(),
-    optionId: BigInt(optionId).toString(),
+  console.log('[submitZkVote] 准备提交的参数 (viem会自动编码):', {
+    proposalId,
+    optionId,
     semaphoreProof: {
-      merkleTreeDepth: merkleTreeDepth.toString(),
-      merkleTreeRoot: proof.merkleTreeRoot.toString(),
-      nullifier: proof.nullifier.toString(),
-      message: proof.message.toString(),
-      scope: proof.scope.toString(),
-      pointsLength: proof.points.length,
+      merkleTreeDepth: semaphoreProof.merkleTreeDepth.toString(),
+      merkleTreeRoot: semaphoreProof.merkleTreeRoot.toString(),
+      nullifier: semaphoreProof.nullifier.toString(),
+      message: semaphoreProof.message.toString(),
+      scope: semaphoreProof.scope.toString(),
+      points: semaphoreProof.points.map(p => p.toString()),
     }
   })
 
@@ -113,14 +119,7 @@ export async function submitZkVote(
     args: [
       BigInt(proposalId),
       BigInt(optionId),
-      {
-        merkleTreeDepth: merkleTreeDepth,
-        merkleTreeRoot: proof.merkleTreeRoot,
-        nullifier: proof.nullifier,
-        message: proof.message,
-        scope: proof.scope,
-        points: proof.points
-      }
+      semaphoreProof
     ],
     gas: 800000n, // ZK 证明验证需要较多 gas
   })
