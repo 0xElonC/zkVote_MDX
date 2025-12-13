@@ -77,7 +77,21 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
           })}
         </ol>
 
-        {isSuccess && <div style={styles.successBox}>投票成功！交易已确认，感谢你的参与。</div>}
+        {isSuccess && (
+          <div style={styles.successBox}>
+            ✅ {flowState.lastSuccessTx?.type === 'vote' ? '投票' : '加入'}成功！交易已确认，感谢你的参与。
+            {flowState.lastSuccessTx && (
+              <a
+                href={`https://sepolia.etherscan.io/tx/${flowState.lastSuccessTx.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.txLink}
+              >
+                查看交易详情 →
+              </a>
+            )}
+          </div>
+        )}
         {isFailed && errorInfo && (
           <div style={styles.errorBox}>
             <strong>{errorInfo.title}</strong>
@@ -171,5 +185,13 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.75rem',
     borderRadius: 'var(--radius-medium)',
     color: '#991b1b',
+  },
+  txLink: {
+    display: 'block',
+    marginTop: '0.5rem',
+    color: '#15803d',
+    fontWeight: 600,
+    textDecoration: 'none',
+    fontSize: '0.9rem',
   },
 }

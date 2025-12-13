@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccount, useChainId, useReadContract } from 'wagmi'
-import SimpleVotingV6ABI from '../abi/SimpleVotingV6.json'
-import {
-  SIMPLE_VOTING_V5_ADDRESS,
-  type SimpleVotingOption,
-} from '../zk/simpleVotingClient'
+import SimpleVotingV7ABI from '../abi/SimpleVotingV7.json'
+import { SIMPLE_VOTING_V7_ADDRESS } from '../zk/simpleVotingClient'
 import { useSemaphoreIdentity } from '../zk/useSemaphoreIdentity'
 import { useZkVotingFlow } from '../zk/useZkVotingFlow'
-import { fetchGroupMembers, checkMembership } from '../zk/groupMembersFetcher'
+import { checkV7Membership } from '../zk/v7MembershipCheck'
+
+// V7 独立树合约地址
+// const SIMPLE_VOTING_V7_ADDRESS = '0xac9086b7efb8bc8ad5226cd6ddc63ce57e766c86' as const
 import ZkVoteProgressModal from './ZkVoteProgressModal'
 import { voteStyles } from './voteStyles'
 
@@ -55,35 +55,37 @@ export default function ZKChainVote() {
 
   const { state: flowState, steps, start, reset } = useZkVotingFlow()
 
-  const { data: title, error: titleError, isLoading: isTitleLoading } = useReadContract({
-    address: SIMPLE_VOTING_V5_ADDRESS,
-    abi: SimpleVotingV6ABI,
+  const { data: title } = useReadContract({
+    address: SIMPLE_VOTING_V7_ADDRESS,
+    abi: SimpleVotingV7ABI,
     functionName: 'getProposalTitle',
     args: [BigInt(PROPOSAL_ID)],
   })
 
   const {
-    data: optionsData,
+    data: optionNames,
     refetch: refetchOptions,
     isPending: isOptionsLoading,
-    error: optionsError,
   } = useReadContract({
-    address: SIMPLE_VOTING_V5_ADDRESS,
-    abi: SimpleVotingV6ABI,
-    functionName: 'getOptions',
+    address: SIMPLE_VOTING_V7_ADDRESS,
+    abi: SimpleVotingV7ABI,
+    functionName: 'getOptionNames',
     args: [BigInt(PROPOSAL_ID)],
   })
 
-  const { data: isActive, error: statusError, isLoading: isStatusLoading } = useReadContract({
-    address: SIMPLE_VOTING_V5_ADDRESS,
-    abi: SimpleVotingV6ABI,
+  const { data: isActive } = useReadContract({
+    address: SIMPLE_VOTING_V7_ADDRESS,
+    abi: SimpleVotingV7ABI,
     functionName: 'getProposalStatus',
     args: [BigInt(PROPOSAL_ID)],
   })
 
-  const options = (optionsData as SimpleVotingOption[]) ?? []
-  const totalVotes = options.reduce((sum, opt) => sum + Number(opt.voteCount), 0)
-  const isEnded = !isActive // V4: 使用 isActive 状态
+  // V7: optionNames 是 string[], 转换为带 id 的格式方便渲染
+  const options = (optionNames as string[] | undefined)?.map((name, index) => ({
+    id: BigInt(index),
+    name,
+  })) ?? []
+  const isEnded = !isActive
   const proposalTitle = typeof title === 'string' ? title : '加载中...'
   const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '--'
 
@@ -95,29 +97,29 @@ export default function ZKChainVote() {
     return isActive ? '投票进行中' : '已结束'
   }, [isActive])
 
-  // 检查用户是否已经加入群组
+  // V7: 检查用户是否已经加入 (通过 getUserGroupId)
   useEffect(() => {
-    if (!commitment) {
+    if (!address) {
       return
     }
 
     setIsCheckingMembership(true)
-    checkMembership(PROPOSAL_ID, commitment)
+    checkV7Membership(PROPOSAL_ID, address)
       .then((isMember) => {
         setHasJoined(isMember)
       })
       .catch((error) => {
-        console.error('[成员检查] ❌ 成员资格检查失败')
-        console.error('[成员检查] 错误详情:', error)
-        console.error('[成员检查] 错误消息:', error?.message)
-        console.error('[成员检查] 错误栈:', error?.stack)
+        console.error('[V7成员检查] ❌ 成员资格检查失败')
+        console.error('[V7成员检查] 错误详情:', error)
+        console.error('[V7成员检查] 错误消息:', error?.message)
+        console.error('[V7成员检查] 错误栈:', error?.stack)
         // 检查失败时默认为未加入
         setHasJoined(false)
       })
       .finally(() => {
         setIsCheckingMembership(false)
       })
-  }, [commitment])
+  }, [address])
 
   // 监听交易哈希变化，更新状态
   useEffect(() => {
@@ -172,33 +174,19 @@ export default function ZKChainVote() {
         return
       }
 
-      // 获取群组成员（仅在完整投票模式下需要）
+      // V7 独立树: 每个用户的 Group 只有自己一个成员
       let groupMembers: bigint[] = []
       if (mode === 'full') {
-        try {
-          console.log('========== 🔍 [步骤 1/5] 获取群组成员列表 ==========')
-          console.log('[ZKChainVote] 开始获取 Proposal ID:', PROPOSAL_ID)
-          console.log('[ZKChainVote] 用户 commitment:', commitment?.toString())
+        console.log('========== 🔍 [V7独立树] 准备用户专属 Group 成员 ==========')
+        console.log('[ZKChainVote] Proposal ID:', PROPOSAL_ID)
+        console.log('[ZKChainVote] 用户 commitment:', commitment?.toString())
 
-          groupMembers = await fetchGroupMembers(PROPOSAL_ID)
+        // V7: groupMembers 只包含用户自己的 commitment
+        groupMembers = [commitment!]
 
-          console.log('[ZKChainVote] ✅ 成功获取成员列表')
-          console.log('[ZKChainVote] 成员数量:', groupMembers.length)
-          console.log('[ZKChainVote] 成员列表:', groupMembers.map(m => m.toString()))
-
-          const isUserInGroup = groupMembers.some(m => m === commitment)
-          console.log('[ZKChainVote] 用户是否在群组中:', isUserInGroup)
-
-          if (groupMembers.length === 0) {
-            console.error('[ZKChainVote] ❌ 群组成员列表为空')
-            alert('群组暂无成员，请先有人加入提案')
-            return
-          }
-        } catch (error) {
-          console.error('[ZKChainVote] ❌ 获取群组成员失败', error)
-          alert('无法获取群组信息，请稍后重试')
-          return
-        }
+        console.log('[ZKChainVote] ✅ V7 独立树成员列表')
+        console.log('[ZKChainVote] 成员数量:', groupMembers.length, '(仅自己)')
+        console.log('[ZKChainVote] 成员:', groupMembers[0].toString())
       }
 
       console.log('========== 🚀 [步骤 2/5] 启动投票流程 ==========')
@@ -206,7 +194,7 @@ export default function ZKChainVote() {
         requiresJoin: !hasJoined,
         proposalId: PROPOSAL_ID,
         optionId: selectedOption,
-        voterAddress: address,
+        _voterAddress: address,
         groupMembersCount: groupMembers.length,
         mode,
       })
@@ -216,7 +204,7 @@ export default function ZKChainVote() {
         requiresJoin: !hasJoined,
         proposalId: PROPOSAL_ID,
         optionId: selectedOption,
-        voterAddress: address,
+        _voterAddress: address,
         identity: identity,
         identityCommitment: commitment,
         groupMembers: groupMembers,
@@ -361,7 +349,6 @@ export default function ZKChainVote() {
           <ul style={styles.optionList}>
             {options.map((option) => {
               const isSelected = selectedOption === Number(option.id)
-              const percentage = totalVotes === 0 ? 0 : Math.round((Number(option.voteCount) / totalVotes) * 100)
               return (
                 <li
                   key={option.id.toString()}
@@ -383,7 +370,6 @@ export default function ZKChainVote() {
                       />
                       <div>
                         <div style={styles.optionName}>{option.name}</div>
-                        <p style={styles.optionMeta}>票数：{option.voteCount.toString()}（{percentage}%）</p>
                       </div>
                     </div>
                   </div>
@@ -437,7 +423,7 @@ export default function ZKChainVote() {
             </div>
             <div style={styles.txRow}>
               <span style={styles.txLabel}>To (合约地址):</span>
-              <code style={styles.txValue}>{SIMPLE_VOTING_V5_ADDRESS}</code>
+              <code style={styles.txValue}>{SIMPLE_VOTING_V7_ADDRESS}</code>
             </div>
             <div style={styles.txRow}>
               <span style={styles.txLabel}>Network:</span>

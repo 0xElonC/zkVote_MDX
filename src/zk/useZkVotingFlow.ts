@@ -47,7 +47,7 @@ type StartVotingParams = {
   requiresJoin: boolean
   proposalId: number
   optionId: number
-  voterAddress: `0x${string}`
+  _voterAddress: `0x${string}`
   identity?: Identity // Semaphore Identity
   identityCommitment?: bigint // 用于 joinProposal
   groupMembers?: bigint[] // 群组成员列表（用于构建 Merkle Tree）
@@ -96,7 +96,6 @@ export function useZkVotingFlow() {
       requiresJoin,
       proposalId,
       optionId,
-      voterAddress,
       identity,
       identityCommitment,
       groupMembers = [],
@@ -125,7 +124,7 @@ export function useZkVotingFlow() {
       try {
         // 步骤 1: 加入提案群组 (如果需要)
         if (requiresJoin) {
-          console.log('========== 📝 [步骤 3/5] 加入提案群组 ==========') 
+          console.log('========== 📝 [步骤 2/6] 加入提案群组 ==========')
           if (!identityCommitment) {
             throw new Error('Identity commitment required for joining')
           }
@@ -141,14 +140,18 @@ export function useZkVotingFlow() {
             txHashes: { ...prev.txHashes, join: joinTx },
           }))
 
-          // 不阻塞 UI：在后台等待确认，仅用于日志
-          waitForTransactionReceipt(wagmiConfig, { hash: joinTx })
-            .then(() => {
-              console.log('[useZkVotingFlow] ✅ 加入交易已确认')
+          // 等待加入交易确认（对于join操作，也需要等待确认后再继续）
+          console.log('[useZkVotingFlow] ⏳ 等待加入交易确认...')
+          try {
+            const joinReceipt = await waitForTransactionReceipt(wagmiConfig, {
+              hash: joinTx,
+              confirmations: 1
             })
-            .catch((waitErr) => {
-              console.warn('[useZkVotingFlow] 加入交易确认等待失败:', waitErr)
-            })
+            console.log('[useZkVotingFlow] ✅ 加入交易已确认:', joinReceipt.transactionHash)
+          } catch (joinConfirmErr) {
+            console.error('[useZkVotingFlow] ❌ 加入交易确认失败:', joinConfirmErr)
+            throw new Error('Join transaction confirmation failed: ' + (joinConfirmErr instanceof Error ? joinConfirmErr.message : 'Unknown error'))
+          }
         }
 
         // 步骤 2: 同步成员 (构建 Merkle Tree)
@@ -198,7 +201,7 @@ export function useZkVotingFlow() {
 
         // 步骤 4: 提交投票
         if (steps.includes('STEP5_SUBMIT_VOTE')) {
-          console.log('========== 📤 [步骤 5/5] 提交投票到链上 ==========')
+          console.log('========== 📤 [步骤 5/6] 提交投票到链上 ==========')
           if (!proofOutput) {
             throw new Error('Proof generation failed')
           }
@@ -210,27 +213,39 @@ export function useZkVotingFlow() {
           console.log('  - Nullifier:', proofOutput.nullifier.toString())
 
           setState((prev) => ({ ...prev, currentStep: 'STEP5_SUBMIT_VOTE' }))
-          const voteTx = await submitZkVote(proposalId, optionId, proofOutput)
+          const voteTx = await submitZkVote(proposalId, proofOutput)
           console.log('[useZkVotingFlow] ✅ 投票交易已提交:', voteTx)
 
-          // 立刻更新状态为成功，不再同步阻塞等待确认
+          // 更新状态为确认阶段
           setState((prev) => ({
             ...prev,
             txHashes: { ...prev.txHashes, vote: voteTx },
-            currentStep: 'SUCCESS',
-            status: 'success',
-            errorType: null,
-            lastSuccessTx: { hash: voteTx, type: 'vote' },
+            currentStep: 'STEP6_CONFIRMATION',
           }))
 
-          // 在后台等待确认，仅用于日志输出，不影响 UI 状态
-          waitForTransactionReceipt(wagmiConfig, { hash: voteTx })
-            .then(() => {
-              console.log('[useZkVotingFlow] ✅ 投票交易已确认')
+          // 等待交易确认
+          console.log('========== ⏳ [步骤 6/6] 等待区块确认 ==========')
+          try {
+            const receipt = await waitForTransactionReceipt(wagmiConfig, {
+              hash: voteTx,
+              confirmations: 1
             })
-            .catch((waitErr) => {
-              console.warn('[useZkVotingFlow] 投票交易确认等待失败:', waitErr)
-            })
+            console.log('[useZkVotingFlow] ✅ 投票交易已确认:', receipt.transactionHash)
+            console.log('[useZkVotingFlow] ✅ 区块高度:', receipt.blockNumber)
+            console.log('[useZkVotingFlow] ✅ Gas 消耗:', receipt.gasUsed.toString())
+
+            // 确认成功后才设置为成功状态
+            setState((prev) => ({
+              ...prev,
+              currentStep: 'SUCCESS',
+              status: 'success',
+              errorType: null,
+              lastSuccessTx: { hash: voteTx, type: 'vote' },
+            }))
+          } catch (confirmErr) {
+            console.error('[useZkVotingFlow] ❌ 交易确认失败:', confirmErr)
+            throw new Error('Transaction confirmation failed: ' + (confirmErr instanceof Error ? confirmErr.message : 'Unknown error'))
+          }
 
           return
         }
