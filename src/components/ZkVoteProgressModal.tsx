@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { VotingFlowState, VotingStepId } from '../zk/useZkVotingFlow'
 
 type StepContent = {
@@ -33,7 +34,22 @@ type Props = {
 }
 
 export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState }: Props) {
-  if (!isOpen) return null
+  const [portalContainer] = useState<HTMLElement | null>(() => {
+    if (typeof document === 'undefined') return null
+    const element = document.createElement('div')
+    element.setAttribute('data-modal-root', 'zk-vote-progress')
+    return element
+  })
+
+  useEffect(() => {
+    if (!portalContainer || typeof document === 'undefined') return
+    document.body.appendChild(portalContainer)
+    return () => {
+      document.body.removeChild(portalContainer)
+    }
+  }, [portalContainer])
+
+  if (!isOpen || !portalContainer) return null
 
   const currentIndex = steps.findIndex((step) => step === flowState.currentStep)
   const isSuccess = flowState.status === 'success'
@@ -42,7 +58,7 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
   const filteredSteps = STEP_COPY.filter((step) => steps.includes(step.id))
   const errorInfo = flowState.errorType ? ERROR_COPY[flowState.errorType] : null
 
-  return (
+  return createPortal(
     <div style={styles.backdrop}>
       <div style={styles.modal}>
         <div style={styles.modalHeader}>
@@ -99,7 +115,8 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    portalContainer,
   )
 }
 
