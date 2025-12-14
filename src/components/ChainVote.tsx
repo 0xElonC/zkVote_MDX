@@ -93,7 +93,7 @@ export default function ChainVote() {
                     <p style={styles.subtitle}>体验完全公开透明的区块链投票</p>
                 </div>
                 <div style={styles.notConnected}>
-                    <p>⚠️ 请先连接钱包以参与投票</p>
+                    <p> 请先连接钱包以参与投票</p>
                     <p style={{ fontSize: '0.875rem', color: '#666' }}>
                         点击页面顶部的「连接钱包」按钮
                     </p>
@@ -109,7 +109,7 @@ export default function ChainVote() {
         <div style={styles.container}>
             {/* 标题区 */}
             <div style={styles.header}>
-                <h3 style={styles.title}>🗳️ 链上投票体验</h3>
+                <h3 style={styles.title}> 链上投票体验</h3>
                 <p style={styles.subtitle}>体验完全公开透明的区块链投票</p>
             </div>
 
@@ -119,12 +119,12 @@ export default function ChainVote() {
                 <code style={styles.walletAddress}>
                     {address?.slice(0, 6)}...{address?.slice(-4)}
                 </code>
-                <span style={styles.warningBadge}>⚠️ 投票记录将公开关联到此地址</span>
+                <span style={styles.warningBadge}> 投票记录将公开关联到此地址</span>
             </div>
 
             {/* 当前提案标题显示 */}
             <div style={styles.proposalTitle}>
-                <strong>📋 当前提案:</strong> {proposalTitle ? (proposalTitle as string) : '加载中...'}
+                <strong> 当前提案:</strong> {proposalTitle ? (proposalTitle as string) : '加载中...'}
             </div>
 
             {/* 选项列表 */}
@@ -207,7 +207,7 @@ export default function ChainVote() {
                     
                     {/* 交易详情卡片 */}
                     <div style={styles.txCard}>
-                        <h4 style={styles.txCardTitle}>📜 交易详情（链上公开可查）</h4>
+                        <h4 style={styles.txCardTitle}> 交易详情（链上公开可查）</h4>
                         
                         <div style={styles.txRow}>
                             <span style={styles.txLabel}>Transaction Hash:</span>
@@ -285,7 +285,7 @@ export default function ChainVote() {
 
             {/* 隐私提示 */}
             <div style={styles.privacyNotice}>
-                <strong>🔍 隐私提示:</strong>
+                <strong> 隐私提示:</strong>
                 <p>
                     在这种传统链上投票中，你的投票选择将与你的钱包地址永久关联。
                     任何人都可以通过区块浏览器查看你的投票记录。

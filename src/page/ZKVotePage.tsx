@@ -4,6 +4,7 @@ import Content from '../content/MyFirstZKVote.mdx'
 import { MDXWrapper } from '../mdx/MDXComponents'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
+import Footer from '../components/Footer'
 
 /**
  * 这个页面示例展示如何在 React + TypeScript 中直接 import 并 render 一个 .mdx 文件
@@ -96,6 +97,8 @@ export default function ZKVotePage() {
         <MDXWrapper>
           <Content />
         </MDXWrapper>
+
+        <Footer />
       </div>
     </div>
   )

@@ -338,7 +338,7 @@ export default function ZKChainVote() {
       </div>
 
       <div style={styles.proposalTitle}>
-        <strong>📋 当前提案:</strong> {proposalTitle}
+        <strong> 当前提案:</strong> {proposalTitle}
         <div style={{ marginTop: '0.4rem', fontSize: '0.9rem' }}>
           状态：{statusText} | 网络：Sepolia (ChainId {chainId})
         </div>

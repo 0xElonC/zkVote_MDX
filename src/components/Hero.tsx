@@ -38,8 +38,19 @@ export default function Hero({ onStartClick }: HeroProps) {
           </div>
         </div>
 
-        {/* LXDAO 卡片 */}
-        <div style={{ ...styles.infoCard, ...styles.lxdaoCard }}>
+        {/* LXDAO 链接按钮 */}
+        <a
+          href="https://lxdao.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="访问 LXDAO 官网"
+          style={{
+            ...styles.infoCard,
+            ...styles.lxdaoCard,
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+        >
           <div style={styles.iconCircle}>
             <img src="/lxdao-logo.svg" alt="LXDAO Logo" style={styles.logoImage} />
           </div>
@@ -47,7 +58,7 @@ export default function Hero({ onStartClick }: HeroProps) {
             <div style={styles.cardLabel}>构建者</div>
             <div style={styles.cardValue}>LXDAO 社区</div>
           </div>
-        </div>
+        </a>
       </div>
 
       {/* 开始按钮 */}
@@ -87,6 +98,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   heroSection: {
     width: '100%',
     minHeight: '100vh',
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -209,7 +221,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     gap: 'var(--spacing-2)',
     opacity: 0.6,
-    animation: 'bounce 2s infinite',
   },
   scrollIcon: {
     fontSize: '2rem',
