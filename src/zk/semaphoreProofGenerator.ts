@@ -8,10 +8,14 @@
 import { Identity } from '@semaphore-protocol/identity'
 import { Group } from '@semaphore-protocol/group'
 import { generateProof } from '@semaphore-protocol/proof'
+import { keccak256, encodeAbiParameters, parseAbiParameters } from 'viem'
 
 const VOTE_NONCE_BITS = 128n
 const VOTE_NONCE_BYTES = Number(VOTE_NONCE_BITS / 8n)
 const VOTE_NONCE_MASK = (1n << VOTE_NONCE_BITS) - 1n
+
+const VOTE_SALT_BITS = 256n
+const VOTE_SALT_BYTES = Number(VOTE_SALT_BITS / 8n)
 
 function getCrypto(): Crypto {
   if (typeof globalThis !== 'undefined' && globalThis.crypto) {
@@ -25,6 +29,27 @@ function generateRandomVoteNonce(): bigint {
   getCrypto().getRandomValues(array)
 
   return array.reduce<bigint>((acc, byte) => (acc << 8n) | BigInt(byte), 0n)
+}
+
+/**
+ * 生成随机 salt (用于 commitment)
+ */
+function generateRandomSalt(): bigint {
+  const array = new Uint8Array(VOTE_SALT_BYTES)
+  getCrypto().getRandomValues(array)
+
+  return array.reduce<bigint>((acc, byte) => (acc << 8n) | BigInt(byte), 0n)
+}
+
+/**
+ * 计算 commitment: hash(optionId, salt)
+ * 使用 keccak256 确保与 Solidity 兼容
+ */
+function hashCommitment(optionId: number, salt: bigint): bigint {
+  const hash = keccak256(
+    encodeAbiParameters(parseAbiParameters('uint256, uint256'), [BigInt(optionId), salt])
+  )
+  return BigInt(hash)
 }
 
 function buildExternalNullifier(proposalId: bigint, voteNonce: bigint): bigint {
@@ -101,7 +126,17 @@ export async function generateSemaphoreProof(
       throw new Error('你的身份还未加入群组，请先点击"加入提案"按钮')
     }
 
-    // 1. 构建 Semaphore Group (Merkle Tree)
+    // 1. 生成随机 salt 和 commitment
+    console.log('[semaphoreProofGenerator] 🔐 生成投票 commitment')
+    const salt = generateRandomSalt()
+    const commitment = hashCommitment(optionId, salt)
+
+    console.log('[semaphoreProofGenerator] Commitment 信息:')
+    console.log('  - Option ID (明文,不上链):', optionId)
+    console.log('  - Salt:', salt.toString())
+    console.log('  - Commitment (上链值):', commitment.toString())
+
+    // 2. 构建 Semaphore Group (Merkle Tree)
     console.log('[semaphoreProofGenerator] 🌳 开始构建 Merkle Tree')
     // Semaphore v4.x Group 构造函数只接受成员列表，不需要 depth 参数
     const group = new Group()
@@ -128,22 +163,23 @@ export async function generateSemaphoreProof(
     console.log('  - 成员总数:', groupMembers.length)
     console.log('  - Merkle Root (本地计算):', group.root.toString())
 
-    // 2. 生成随机 voteNonce 并构造新的 external nullifier
+    // 3. 生成随机 voteNonce 并构造新的 external nullifier
     const voteNonce = generateRandomVoteNonce()
     const externalNullifier = buildExternalNullifier(BigInt(proposalId), voteNonce)
     console.log('[semaphoreProofGenerator] External Nullifier 生成:')
     console.log('  - Vote Nonce:', voteNonce.toString())
     console.log('  - External Nullifier:', externalNullifier.toString())
 
-    // 3. 生成证明
+    // 4. 生成证明 (使用 commitment 而非明文 optionId)
     console.log('[semaphoreProofGenerator] 🔐 开始生成 ZK 证明...')
-    // message (signal) = optionId (投票选项)
+    console.log('  ⚠️  使用 commitment 作为 message (隐藏投票内容)')
+    // message (signal) = commitment (投票选项的哈希)
     // scope = externalNullifier (绑定提案 + 随机 nonce)
     // merkleTreeDepth 由库自动根据 Merkle proof 推断
     const fullProof = await generateProof(
       identity,
       group,
-      BigInt(optionId), // message/signal
+      commitment, // ✅ 使用 commitment 而非明文 optionId
       externalNullifier // scope/external nullifier
     )
     console.log('[semaphoreProofGenerator] ✅ ZK 证明生成完成')
@@ -174,18 +210,18 @@ export async function generateSemaphoreProof(
 
     const proofOutput: SemaphoreProofOutput = {
       merkleTreeDepth: merkleTreeDepth,
-      merkleTreeRoot: fullProof.merkleTreeRoot,
-      nullifier: fullProof.nullifier,
-      message: BigInt(optionId),
-      scope: externalNullifier,
-      points: fullProof.points as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
+      merkleTreeRoot: BigInt(fullProof.merkleTreeRoot),
+      nullifier: BigInt(fullProof.nullifier),
+      message: commitment, // ✅ 这里是 commitment，不是明文 optionId
+      scope: BigInt(fullProof.scope),
+      points: fullProof.points.map(p => BigInt(p)) as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
     }
 
     console.log('[semaphoreProofGenerator] 📦 证明输出数据:')
     console.log('  - Merkle Tree Depth:', proofOutput.merkleTreeDepth.toString())
     console.log('  - Merkle Tree Root:', proofOutput.merkleTreeRoot.toString())
     console.log('  - Nullifier:', proofOutput.nullifier.toString())
-    console.log('  - Message (optionId):', proofOutput.message.toString())
+    console.log('  - Message (commitment):', proofOutput.message.toString())
     console.log('  - Scope (external nullifier):', proofOutput.scope.toString())
     console.log('  - Proof Points 数量:', proofOutput.points.length)
     console.log('')
@@ -193,6 +229,35 @@ export async function generateSemaphoreProof(
     console.log('  - 本地 Merkle Root:', proofOutput.merkleTreeRoot.toString())
     console.log('  - 请在区块链浏览器检查链上实际 Merkle Root 是否匹配')
     console.log('  - 如果不匹配,说明前端获取的成员列表不完整')
+    console.log('')
+    console.log('🔒 隐私保护信息:')
+    console.log('  - 链上可见: commitment (无法得知投了什么)')
+    console.log('  - 本地保存: optionId + salt (仅保存最新一次投票)')
+    console.log('  - 重复投票: 新的 salt 覆盖旧的')
+    console.log('  - 结果: 用户可查看最后一次投票内容')
+
+    // 保存投票记录到 localStorage (每次覆盖)
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        const voteRecord = {
+          proposalId,
+          optionId,
+          salt: salt.toString(),
+          commitment: commitment.toString(),
+          nullifier: proofOutput.nullifier.toString(),
+          timestamp: Date.now(),
+        }
+
+        const storageKey = `vote-record-proposal-${proposalId}`
+        localStorage.setItem(storageKey, JSON.stringify(voteRecord))
+
+        console.log('[semaphoreProofGenerator] ✅ 投票记录已保存 (覆盖旧记录)')
+        console.log('  - Storage Key:', storageKey)
+        console.log('  - 查看方法: localStorage.getItem("' + storageKey + '")')
+      } catch (error) {
+        console.warn('[semaphoreProofGenerator] ⚠️  无法保存到 localStorage:', error)
+      }
+    }
 
     return proofOutput
   } catch (error) {
@@ -254,8 +319,8 @@ export async function verifyProofLocally(proof: SemaphoreProofOutput): Promise<b
  * 需要通过事件或专门的 getter 函数获取成员列表
  */
 export async function fetchGroupMembers(
-  proposalId: number,
-  contract: any // Wagmi contract instance
+  _proposalId: number,
+  _contract: any // Wagmi contract instance
 ): Promise<bigint[]> {
   try {
     // 方法 1: 通过 Semaphore 的 getMerkleTreeRoot 和重建
@@ -272,28 +337,3 @@ export async function fetchGroupMembers(
   }
 }
 
-/**
- * 帮助函数：下载 Semaphore 证明文件到本地
- *
- * 可选：如果想加快证明生成速度，可以将文件下载到 public/semaphore/
- */
-export async function downloadSemaphoreFiles(): Promise<void> {
-  try {
-
-    const files = [
-      { url: SEMAPHORE_FILES.wasmFile, name: 'semaphore.wasm' },
-      { url: SEMAPHORE_FILES.zkeyFile, name: 'semaphore.zkey' },
-    ]
-
-    for (const file of files) {
-      const response = await fetch(file.url)
-      if (!response.ok) {
-        throw new Error(`Failed to download ${file.name}`)
-      }
-    }
-
-  } catch (error) {
-    console.error('[downloadSemaphoreFiles] 下载失败', error)
-    throw error
-  }
-}

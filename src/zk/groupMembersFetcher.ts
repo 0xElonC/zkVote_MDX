@@ -6,7 +6,7 @@
 
 import { parseAbiItem } from 'viem'
 import { publicClient } from '../wagmiConfig'
-import { SIMPLE_VOTING_V5_ADDRESS } from './simpleVotingClient'
+import { SIMPLE_VOTING_V7_ADDRESS } from './simpleVotingClient'
 
 // 合约部署区块号 - 代理合约实际部署区块
 const DEPLOYMENT_BLOCK = 9811631n
@@ -31,11 +31,11 @@ const MEMBER_JOINED_EVENT = parseAbiItem(
  */
 export async function fetchGroupMembers(proposalId: number): Promise<bigint[]> {
   const maxRetries = 3
-  let lastError: Error | null = null
+  let _lastError: Error | null = null
 
   console.log('[groupMembersFetcher] 开始获取群组成员')
   console.log('[groupMembersFetcher] Proposal ID:', proposalId)
-  console.log('[groupMembersFetcher] 合约地址:', SIMPLE_VOTING_V5_ADDRESS)
+  console.log('[groupMembersFetcher] 合约地址:', SIMPLE_VOTING_V7_ADDRESS)
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -68,7 +68,7 @@ export async function fetchGroupMembers(proposalId: number): Promise<bigint[]> {
           console.log(`[groupMembersFetcher] 📊 查询分段: ${currentBlock} → ${endBlock} (${endBlock - currentBlock} 个区块)`)
 
           const logs = await publicClient.getLogs({
-            address: SIMPLE_VOTING_V5_ADDRESS,
+            address: SIMPLE_VOTING_V7_ADDRESS,
             event: MEMBER_JOINED_EVENT,
             args: {
               proposalId: BigInt(proposalId),
@@ -93,7 +93,7 @@ export async function fetchGroupMembers(proposalId: number): Promise<bigint[]> {
         console.log('[groupMembersFetcher] ✅ 区块范围在限制内，使用单次查询')
 
         allLogs = await publicClient.getLogs({
-          address: SIMPLE_VOTING_V5_ADDRESS,
+          address: SIMPLE_VOTING_V7_ADDRESS,
           event: MEMBER_JOINED_EVENT,
           args: {
             proposalId: BigInt(proposalId),
@@ -131,7 +131,7 @@ export async function fetchGroupMembers(proposalId: number): Promise<bigint[]> {
 
       return members
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
+      _lastError = error instanceof Error ? error : new Error(String(error))
       console.error(`[fetchGroupMembers] 获取失败 (尝试 ${attempt + 1}/${maxRetries})`, error)
 
       // 如果不是最后一次尝试，等待后重试
@@ -142,7 +142,7 @@ export async function fetchGroupMembers(proposalId: number): Promise<bigint[]> {
     }
   }
 
-  throw new Error(`Failed to fetch group members after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`)
+  throw new Error(`Failed to fetch group members after ${maxRetries} attempts: ${_lastError?.message || 'Unknown error'}`)
 }
 
 /**
@@ -173,7 +173,6 @@ export async function checkMembership(
  */
 export async function getGroupMemberCount(proposalId: number): Promise<number> {
   const maxRetries = 3
-  let lastError: Error | null = null
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -193,7 +192,7 @@ export async function getGroupMemberCount(proposalId: number): Promise<number> {
             : currentBlock + MAX_BLOCK_RANGE
 
           const logs = await publicClient.getLogs({
-            address: SIMPLE_VOTING_V5_ADDRESS,
+            address: SIMPLE_VOTING_V7_ADDRESS,
             event: MEMBER_JOINED_EVENT,
             args: {
               proposalId: BigInt(proposalId),
@@ -213,7 +212,7 @@ export async function getGroupMemberCount(proposalId: number): Promise<number> {
       } else {
         // 单次查询
         const logs = await publicClient.getLogs({
-          address: SIMPLE_VOTING_V5_ADDRESS,
+          address: SIMPLE_VOTING_V7_ADDRESS,
           event: MEMBER_JOINED_EVENT,
           args: {
             proposalId: BigInt(proposalId),
@@ -227,7 +226,6 @@ export async function getGroupMemberCount(proposalId: number): Promise<number> {
 
       return totalCount
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
       console.error(`[getGroupMemberCount] 获取失败 (尝试 ${attempt + 1}/${maxRetries})`, error)
 
       // 如果不是最后一次尝试，等待后重试

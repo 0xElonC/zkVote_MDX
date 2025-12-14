@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { VotingFlowState, VotingStepId } from '../zk/useZkVotingFlow'
 
 type StepContent = {
@@ -33,7 +34,22 @@ type Props = {
 }
 
 export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState }: Props) {
-  if (!isOpen) return null
+  const [portalContainer] = useState<HTMLElement | null>(() => {
+    if (typeof document === 'undefined') return null
+    const element = document.createElement('div')
+    element.setAttribute('data-modal-root', 'zk-vote-progress')
+    return element
+  })
+
+  useEffect(() => {
+    if (!portalContainer || typeof document === 'undefined') return
+    document.body.appendChild(portalContainer)
+    return () => {
+      document.body.removeChild(portalContainer)
+    }
+  }, [portalContainer])
+
+  if (!isOpen || !portalContainer) return null
 
   const currentIndex = steps.findIndex((step) => step === flowState.currentStep)
   const isSuccess = flowState.status === 'success'
@@ -42,7 +58,7 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
   const filteredSteps = STEP_COPY.filter((step) => steps.includes(step.id))
   const errorInfo = flowState.errorType ? ERROR_COPY[flowState.errorType] : null
 
-  return (
+  return createPortal(
     <div style={styles.backdrop}>
       <div style={styles.modal}>
         <div style={styles.modalHeader}>
@@ -77,7 +93,21 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
           })}
         </ol>
 
-        {isSuccess && <div style={styles.successBox}>投票成功！交易已确认，感谢你的参与。</div>}
+        {isSuccess && (
+          <div style={styles.successBox}>
+            ✅ {flowState.lastSuccessTx?.type === 'vote' ? '投票' : '加入'}成功！交易已确认，感谢你的参与。
+            {flowState.lastSuccessTx && (
+              <a
+                href={`https://sepolia.etherscan.io/tx/${flowState.lastSuccessTx.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.txLink}
+              >
+                查看交易详情 →
+              </a>
+            )}
+          </div>
+        )}
         {isFailed && errorInfo && (
           <div style={styles.errorBox}>
             <strong>{errorInfo.title}</strong>
@@ -85,7 +115,8 @@ export default function ZkVoteProgressModal({ isOpen, onClose, steps, flowState 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    portalContainer,
   )
 }
 
@@ -171,5 +202,13 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.75rem',
     borderRadius: 'var(--radius-medium)',
     color: '#991b1b',
+  },
+  txLink: {
+    display: 'block',
+    marginTop: '0.5rem',
+    color: '#15803d',
+    fontWeight: 600,
+    textDecoration: 'none',
+    fontSize: '0.9rem',
   },
 }

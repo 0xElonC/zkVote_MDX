@@ -37,7 +37,9 @@ export function useSemaphoreIdentity() {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const data = JSON.parse(stored)
-        const identity = new Identity(data.privateKey)
+        console.log("[useSemaphoreIdentity] 从localStorage中加载到身份: data.commitment:{}", data.commitment)
+        const identity = Identity.import(data.privateKey)
+        console.log("[useSemaphoreIdentity] 还原新身份：{}", identity)
 
         setState({
           identity,
@@ -45,6 +47,7 @@ export function useSemaphoreIdentity() {
           isReady: true,
         })
       } else {
+        console.log("[useSemaphoreIdentity] No existing identity found in storage")
         setState((prev) => ({ ...prev, isReady: true }))
       }
     } catch (error) {
@@ -62,10 +65,11 @@ export function useSemaphoreIdentity() {
     try {
       // 生成新身份
       const identity = new Identity()
+      console.log("[useSemaphoreIdentity] 新身份：{}", identity)
 
       // 持久化存储
       const data = {
-        privateKey: identity.toString(),
+        privateKey: identity.export(),
         commitment: identity.commitment.toString(),
         createdAt: Date.now(),
       }
@@ -114,7 +118,7 @@ export function useSemaphoreIdentity() {
       throw new Error('No identity to export')
     }
     return {
-      privateKey: state.identity.toString(),
+      privateKey: state.identity.export(),
       commitment: state.identity.commitment.toString(),
     }
   }, [state.identity])
@@ -124,10 +128,10 @@ export function useSemaphoreIdentity() {
    */
   const importIdentity = useCallback((privateKey: string) => {
     try {
-      const identity = new Identity(privateKey)
+      const identity = Identity.import(privateKey)
 
       const data = {
-        privateKey: identity.toString(),
+        privateKey: identity.export(),
         commitment: identity.commitment.toString(),
         createdAt: Date.now(),
       }
