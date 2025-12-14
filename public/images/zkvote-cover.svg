@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="ZKVote 教程概览：链上投票与零知识投票对比">
+  <rect x="0" y="0" width="1200" height="520" fill="white"/>
+
+  <text x="60" y="90" font-size="46" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#111827" font-weight="700">
+    My First ZKVote
+  </text>
+  <text x="60" y="140" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    从公开链上投票 → 零知识匿名投票（生成证明 → 提交交易 → 链上验证）
+  </text>
+
+  <!-- Left: On-chain voting -->
+  <rect x="60" y="190" width="520" height="270" rx="18" fill="#ffffff" stroke="#111827" stroke-width="3"/>
+  <text x="90" y="235" font-size="28" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#111827" font-weight="700">
+    传统链上投票
+  </text>
+
+  <circle cx="100" cy="285" r="10" fill="#111827"/>
+  <text x="125" y="292" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    交易公开：from / to / calldata
+  </text>
+
+  <circle cx="100" cy="330" r="10" fill="#111827"/>
+  <text x="125" y="337" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    可复算：任何人都能审计
+  </text>
+
+  <circle cx="100" cy="375" r="10" fill="#111827"/>
+  <text x="125" y="382" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    隐私弱：地址可关联投票偏好
+  </text>
+
+  <!-- Right: ZK voting -->
+  <rect x="620" y="190" width="520" height="270" rx="18" fill="#ffffff" stroke="#111827" stroke-width="3"/>
+  <text x="650" y="235" font-size="28" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#111827" font-weight="700">
+    ZK 匿名投票
+  </text>
+
+  <circle cx="660" cy="285" r="10" fill="#111827"/>
+  <text x="685" y="292" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    证明资格：我是选民集合成员
+  </text>
+
+  <circle cx="660" cy="330" r="10" fill="#111827"/>
+  <text x="685" y="337" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    防重复：nullifier 一次性使用
+  </text>
+
+  <circle cx="660" cy="375" r="10" fill="#111827"/>
+  <text x="685" y="382" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    不泄露：身份秘密与投票细节
+  </text>
+
+  <!-- Middle arrow -->
+  <path d="M 580 315 C 640 315 560 315 620 315" fill="none" stroke="#111827" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 610 300 L 635 315 L 610 330" fill="none" stroke="#111827" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="516" y="300" font-size="16" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    引入 ZKP
+  </text>
+</svg>

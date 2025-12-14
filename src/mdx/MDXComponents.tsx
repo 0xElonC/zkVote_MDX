@@ -154,6 +154,46 @@ export const Pre: React.FC<React.PropsWithChildren> = ({ children }) => (
   </pre>
 )
 
+export const Img: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+  <img
+    {...props}
+    style={{
+      display: 'block',
+      maxWidth: '100%',
+      height: 'auto',
+      margin: 'var(--spacing-4) 0 var(--spacing-6)',
+      border: '2px solid var(--neutral-200)',
+      borderRadius: 'var(--radius-medium)',
+      boxSizing: 'border-box',
+      ...(props.style ?? {}),
+    }}
+  />
+)
+
+export const Figcaption: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <figcaption style={{
+    marginTop: 'var(--spacing-2)',
+    color: 'var(--neutral-500)',
+    fontSize: '0.85rem',
+    lineHeight: 'var(--line-height-normal)',
+    textAlign: 'center',
+  }}>{children}</figcaption>
+)
+
+export const Figure: React.FC<{
+  src: string
+  alt: string
+  caption?: React.ReactNode
+}> = ({ src, alt, caption }) => (
+  <figure style={{
+    width: '100%',
+    margin: 'var(--spacing-4) 0 var(--spacing-6)',
+  }}>
+    <Img src={src} alt={alt} style={{ margin: 0 }} />
+    {caption ? <Figcaption>{caption}</Figcaption> : null}
+  </figure>
+)
+
 export const Card: React.FC<React.PropsWithChildren & {accent?: boolean}> = ({ children, accent }) => (
   <div style={{
     width: '100%',
@@ -184,7 +224,10 @@ export const mdxComponents = {
   hr: Hr,
   code: Code,
   pre: Pre,
+  img: Img,
+  figcaption: Figcaption,
   Card,
+  Figure,
   Counter,
   ChainVote,
   ZKChainVote,

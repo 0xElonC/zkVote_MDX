@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="链上投票的可验证性：区块浏览器可查询与复算">
+  <rect x="0" y="0" width="1200" height="520" fill="white"/>
+
+  <text x="60" y="85" font-size="34" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#111827" font-weight="700">
+    链上投票 = 公开交易 + 可独立复算
+  </text>
+  <text x="60" y="125" font-size="18" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    每一票都是一笔交易：任何人都能在区块浏览器里查询、验证、复算结果。
+  </text>
+
+  <!-- Explorer frame -->
+  <rect x="60" y="160" width="1080" height="300" rx="18" fill="#ffffff" stroke="#111827" stroke-width="3"/>
+
+  <!-- Header bar -->
+  <rect x="60" y="160" width="1080" height="56" rx="18" fill="#ffffff" stroke="#111827" stroke-width="0"/>
+  <line x1="60" y1="216" x2="1140" y2="216" stroke="#111827" stroke-width="2"/>
+
+  <text x="90" y="198" font-size="18" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#111827" font-weight="700">
+    Transactions
+  </text>
+
+  <!-- Rows -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="16" fill="#111827">
+    <text x="90" y="260">from: 0xA1...9F2B</text>
+    <text x="420" y="260">to: 0xVote...c0de</text>
+    <text x="720" y="260">method: vote(choice=1)</text>
+
+    <text x="90" y="310">from: 0xB7...1C4D</text>
+    <text x="420" y="310">to: 0xVote...c0de</text>
+    <text x="720" y="310">method: vote(choice=0)</text>
+
+    <text x="90" y="360">from: 0xCC...88E0</text>
+    <text x="420" y="360">to: 0xVote...c0de</text>
+    <text x="720" y="360">method: vote(choice=1)</text>
+  </g>
+
+  <text x="90" y="430" font-size="16" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
+    优点：透明、可审计；代价：投票行为与地址强绑定。
+  </text>
+</svg>

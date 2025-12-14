@@ -5,7 +5,13 @@
 export const author = "React 学习者";
 export const currentYear = 2025;
 
-## My First ZKVote：从链上投票到零知识证明
+# My First ZKVote：从链上投票到零知识证明
+
+<Figure
+    src="/images/zkvote-cover.svg"
+    alt="ZKVote 教程概览：传统链上投票 vs ZK 匿名投票"
+    caption="先体验一次完全公开的链上投票，再完成一次基于零知识证明的匿名投票。"
+/>
 
 在这个教程里，你会经历两件事：
 
@@ -33,8 +39,13 @@ export const currentYear = 2025;
 从选票生成、传输、计票到结果发布，每一步都可以被任何第三方独立验证。
 
 然而，「透明」带来可验证性的同时，也引入了一个明显问题：**隐私几乎不存在**。
+<Figure
+    src="/images/onchain-verifiability.svg"
+    alt="链上投票的可验证性示意"
+    caption="每一票都是交易：公开可查、可复算，也更容易被关联。"
+/>
 
-## 1.1 来进行你的第一次链上投票
+### 1.1 来进行你的第一次链上投票
 
 - 先连接你的钱包
 - 切换钱包的网络到 Sepolia
@@ -42,6 +53,7 @@ export const currentYear = 2025;
 - 选择提交选票
 
 <ChainVote />
+
 ## 二、传统链上投票的隐私困境
 
 在最简单的链上投票设计中，一个地址对应一张选票：
@@ -72,6 +84,12 @@ export const currentYear = 2025;
 
 零知识证明（Zero-Knowledge Proof）正是解决这一矛盾的核心密码学工具。
 
+<Figure
+    src="/images/privacy-leak.svg"
+    alt="公开链上投票的隐私泄露路径"
+    caption="地址与投票偏好可被关联，再进一步映射到现实身份。"
+/>
+
 ## 三、零知识证明基础：证明什么、向谁证明？
 
 ### 3.1 Prover / Verifier 模型
@@ -80,6 +98,8 @@ export const currentYear = 2025;
 
 - **证明者（Prover）**：掌握某个秘密信息，希望向他人证明自己「确实知道」这个秘密；
 - **验证者（Verifier）**：希望确认某个断言是真的，但不想（或不允许）知道该秘密本身。
+
+### 3.2 Statement / Witness：你在“证明”什么？
 
 我们把「要被证明的陈述」称为 **语句（statement）**，把证明者掌握的秘密称为 **见证（witness）**。
 
@@ -94,6 +114,12 @@ export const currentYear = 2025;
 - 证明你是选民集合成员所需的 Merkle 路径；
 - 你选择的具体投票选项等私密数据
 
+<Figure
+    src="/images/public-vs-witness.svg"
+    alt="Public Inputs 与 Witness 的区别"
+    caption="验证者只看到公开输入与 proof，但能确信存在某个私有见证使约束成立。"
+/>
+
 ### 3.3 零知识证明必须满足的三个性质
 
 形式上，一个零知识证明系统需要同时满足三个核心性质：
@@ -102,7 +128,7 @@ export const currentYear = 2025;
     
     如果语句是真的，并且证明者与验证者都按照协议诚实地执行，那么验证者最终一定会被说服。
     
-2. **可靠性 / 可靠性（Soundness）**
+2. **可靠性（Soundness）**
     
     如果语句是假的，那么任何试图伪造证明的「作弊」证明者，都几乎不可能骗过诚实的验证者。
     
@@ -119,18 +145,35 @@ export const currentYear = 2025;
 - 可靠性保证「非选民或者试图一人多投的人无法通过验证」；
 - 零知识性保证「验证者无法从证明中推断出你是谁、投了什么票」。
 
+<Figure
+    src="/images/zk-properties.svg"
+    alt="零知识证明三大性质示意"
+    caption="能投（完备性）、不能作弊（可靠性）、不泄露（零知识性）。"
+/>
+
 ### 3.4 来进行你的第一次ZK链上投票
 
 - 先连接你的钱包
 - 切换钱包的网络到 Sepolia
-- 点击“生成匿名身份”，会生成的身份承诺`identitySecret`
-- 点击“加入提案”，会将身份证明加入这个提案允许投票用户的merkle树内
+- 点击“生成匿名身份”，在本地生成身份秘密 `identitySecret`（并据此计算身份承诺 identity commitment）
+- 点击“加入提案”，把你的身份承诺加入该提案允许投票用户的 Merkle 树
 - 选择提案，提交投票
-<img src="/ZK_1.png" alt="ZK投票流程图" style={{ border: '2px solid #e5e7eb', borderRadius: '12px', maxWidth: '100%', marginTop: '1rem', marginBottom: '1.5rem' }} />
+
+<Figure
+    src="/ZK_1.png"
+    alt="ZK 投票交互界面示意"
+    caption="界面示意：生成身份 → 加入提案 → 匿名投票。"
+/>
 
 <ZKChainVote />
 
 ### 这一次ZK投票里做了什么
+
+<Figure
+    src="/images/zk-flow-v2.svg"
+    alt="ZK 投票端到端流程示意"
+    caption="重新生成的流程图（v2）：避免 SVG 字符转义导致的图裂。"
+/>
 
 1. **生成身份秘密与承诺**
     - 前端在本地生成 `identitySecret`；
@@ -160,13 +203,19 @@ export const currentYear = 2025;
         - 具体是哪一个 `identitySecret` 参与了某次投票；
         - 某个真实世界身份在这场投票中选择了什么。
 
-### 3.4 交互式 vs 非交互式、zk-SNARK 与 zk-STARK
+### 3.5 交互式 vs 非交互式、zk-SNARK 与 zk-STARK
 
 最早的零知识证明是**交互式**的：证明者和验证者要来回多轮问答，才能完成一次证明。
 
 在区块链场景下，这种方式不现实：我们希望证明能以**单个对象**的形式提交到链上，由合约一次性做出判断，因此需要使用 **非交互式零知识证明（NIZK）**。
 
 目前在区块链上常见的两类 NIZK 系统有：
+
+<Figure
+    src="/images/snark-stark.svg"
+    alt="zk-SNARK 与 zk-STARK 概念级对比"
+    caption="只用于快速建立直觉：具体性能与取舍取决于实现与参数。"
+/>
 
 - **zk-SNARK（Zero-Knowledge Succinct Non-Interactive Argument of Knowledge）**
     - *Succinct*：证明大小很小，验证开销与原始计算规模无关或几乎无关；
@@ -261,6 +310,12 @@ function vote(
 
 ### 5.1 身份注册与选民集合
 
+<Figure
+    src="/images/merkle-nullifier.svg"
+    alt="身份承诺、Merkle 树与 nullifier 示意"
+    caption="root 存链上；Merkle 路径在证明里；nullifier 防止重复投票。"
+/>
+
 在投票开始前，我们需要确定谁有权投票。一个典型流程是：
 
 1. 每个选民在本地生成一个随机秘密 `identitySecret`；
@@ -300,7 +355,7 @@ nullifier = Hash(identitySecret, electionId)
 
 对于投票选项本身，我们在电路中通常会加入以下约束：
 
-- `vote` 必须是允许的选项之一（例如只能是 {0,1}、或 1~N 之间的整数）；
+- `vote` 必须是允许的选项之一（例如只能是 `{0,1}`、或 1~N 之间的整数）；
 - 对于多选题，可以约束票数和在某个范围内；
 - 如果为了进一步保护隐私，也可以在链上只记录密文或承诺，而不直接记录明文票项。
 

@@ -309,6 +309,9 @@ export default function ZKChainVote() {
     )
   }
 
+  const shouldReplaceOptionsWithTx =
+    flowState.status === 'success' && flowState.lastSuccessTx?.type === 'vote' && !!txHashToShow
+
   if (!isConnected) {
     return (
       <div style={styles.container}>
@@ -341,71 +344,114 @@ export default function ZKChainVote() {
         </div>
       </div>
 
-      <div style={styles.optionsSection}>
-        <h4>投票选项</h4>
-        {isOptionsLoading ? (
-          <p>正在加载...</p>
-        ) : (
-          <ul style={styles.optionList}>
-            {options.map((option) => {
-              const isSelected = selectedOption === Number(option.id)
-              return (
-                <li
-                  key={option.id.toString()}
-                  style={{
-                    ...styles.optionCard,
-                    ...(isSelected ? styles.optionCardSelected : {}),
-                  }}
-                  onClick={() => {
-                    setSelectedOption(Number(option.id))
-                  }}
-                >
-                  <div style={styles.optionHeader}>
-                    <div style={styles.radioContainer}>
-                      <div
-                        style={{
-                          ...styles.radio,
-                          ...(isSelected ? styles.radioSelected : {}),
-                        }}
-                      />
-                      <div>
-                        <div style={styles.optionName}>{option.name}</div>
+      {shouldReplaceOptionsWithTx ? (
+        <div style={styles.txDetailContainer}>
+          <div style={styles.successHeader}>
+            <span style={styles.successIcon}>✅</span>
+            <span>投票交易已确认（已完成）</span>
+          </div>
+          <div style={styles.txCard}>
+            <h4 style={styles.txCardTitle}>📜 交易详情（链上公开可查）</h4>
+            <div style={styles.txRow}>
+              <span style={styles.txLabel}>Transaction Hash:</span>
+              <code style={styles.txValue}>{txHashToShow}</code>
+            </div>
+            <div style={styles.txRow}>
+              <span style={styles.txLabel}>From (你的地址):</span>
+              <code style={styles.txValueHighlight}>{address}</code>
+            </div>
+            <div style={styles.txRow}>
+              <span style={styles.txLabel}>To (合约地址):</span>
+              <code style={styles.txValue}>{SIMPLE_VOTING_V7_ADDRESS}</code>
+            </div>
+            <div style={styles.txRow}>
+              <span style={styles.txLabel}>Network:</span>
+              <code style={styles.txValue}>Sepolia Testnet (Chain ID: {chainId})</code>
+            </div>
+            <div style={styles.inputDataAnalysis}>
+              <h4 style={styles.analysisTitle}>🔍 Input Data 解读</h4>
+              {renderTxAnalysis()}
+            </div>
+            <a
+              href={`https://sepolia.etherscan.io/tx/${txHashToShow}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.explorerLink}
+            >
+              🔗 在 Etherscan 查看完整交易 →
+            </a>
+          </div>
+          {renderPrivacySummary()}
+        </div>
+      ) : (
+        <>
+          <div style={styles.optionsSection}>
+            <h4>投票选项</h4>
+            {isOptionsLoading ? (
+              <p>正在加载...</p>
+            ) : (
+              <ul style={styles.optionList}>
+                {options.map((option) => {
+                  const isSelected = selectedOption === Number(option.id)
+                  return (
+                    <li
+                      key={option.id.toString()}
+                      style={{
+                        ...styles.optionCard,
+                        ...(isSelected ? styles.optionCardSelected : {}),
+                      }}
+                      onClick={() => {
+                        setSelectedOption(Number(option.id))
+                      }}
+                    >
+                      <div style={styles.optionHeader}>
+                        <div style={styles.radioContainer}>
+                          <div
+                            style={{
+                              ...styles.radio,
+                              ...(isSelected ? styles.radioSelected : {}),
+                            }}
+                          />
+                          <div>
+                            <div style={styles.optionName}>{option.name}</div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
 
-      <div style={styles.infoBox}>
-        <strong>💡 新的投票流程</strong>
-        <p style={{ margin: '0.5rem 0 0' }}>
-          现在你无需手动导入证明！点击投票按钮后，系统会自动在浏览器本地生成 ZK 证明（耗时 2-5 秒），
-          然后直接提交到链上。整个过程完全隐私，你的投票选项不会泄露。
-        </p>
-      </div>
+          <div style={styles.infoBox}>
+            <strong>💡 新的投票流程</strong>
+            <p style={{ margin: '0.5rem 0 0' }}>
+              现在你无需手动导入证明！点击投票按钮后，系统会自动在浏览器本地生成 ZK 证明（耗时 2-5 秒），
+              然后直接提交到链上。整个过程完全隐私，你的投票选项不会泄露。
+            </p>
+          </div>
 
-      <button
-        style={{
-          ...styles.voteButton,
-          ...(buttonCopy.disabled ? styles.voteButtonDisabled : {}),
-        }}
-        disabled={buttonCopy.disabled}
-        onClick={buttonCopy.action}
-      >
-        {buttonCopy.label}
-      </button>
+          <button
+            style={{
+              ...styles.voteButton,
+              ...(buttonCopy.disabled ? styles.voteButtonDisabled : {}),
+            }}
+            disabled={buttonCopy.disabled}
+            onClick={buttonCopy.action}
+          >
+            {buttonCopy.label}
+          </button>
 
-      {hasVoted && (
-        <p style={{ marginTop: '0.75rem', color: 'var(--neutral-600)', fontSize: '0.9rem' }}>
-          ✅ 你已经完成一次匿名投票。想继续表达意见？随时再投一票，系统会为每次投票生成全新的 nullifier。
-        </p>
+          {hasVoted && (
+            <p style={{ marginTop: '0.75rem', color: 'var(--neutral-600)', fontSize: '0.9rem' }}>
+              ✅ 你已经完成一次匿名投票。想继续表达意见？随时再投一票，系统会为每次投票生成全新的 nullifier。
+            </p>
+          )}
+        </>
       )}
 
-      {txHashToShow && !isModalOpen && (
+      {txHashToShow && !isModalOpen && !shouldReplaceOptionsWithTx && (
         <div style={styles.txDetailContainer}>
           <div style={styles.successHeader}>
             <span style={styles.successIcon}>{txType === 'vote' ? '✅' : '📝'}</span>
