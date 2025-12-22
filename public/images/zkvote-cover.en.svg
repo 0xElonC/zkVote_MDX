@@ -5,7 +5,7 @@
     My First ZKVote
   </text>
   <text x="60" y="140" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
-    From public on-chain voting 1 ZK anonymous voting (generate proof 1 submit tx 1 on-chain verification)
+    From public on-chain voting → ZK anonymous voting (generate proof → submit tx → on-chain verification)
   </text>
 
   <!-- Left: On-chain voting -->
@@ -26,7 +26,7 @@
 
   <circle cx="100" cy="375" r="10" fill="#111827"/>
   <text x="125" y="382" font-size="20" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" fill="#374151">
-    Weak privacy: address 9 preference
+    Weak privacy: address → preference
   </text>
 
   <!-- Right: ZK voting -->
