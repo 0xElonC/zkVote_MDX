@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+cmds = ["corepack enable pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "npx serve dist -l 3000 -s"
